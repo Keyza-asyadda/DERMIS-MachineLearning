@@ -55,3 +55,4 @@ class CategoricalFocalCrossentropy(keras.losses.Loss):
             'from_logits': self.from_logits,
             'axis': self._axis
         })
+        return config
