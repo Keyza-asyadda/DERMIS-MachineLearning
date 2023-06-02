@@ -1,9 +1,9 @@
 from tensorflow.keras import backend as K
 from tensorflow import keras
 import tensorflow as tf
+from const import register
 
-
-@keras.saving.register_keras_serializable()
+@register
 class Swish(keras.layers.Layer):
 
     def __init__(self, beta = None, *args, **kwargs):
@@ -31,7 +31,7 @@ class Swish(keras.layers.Layer):
     def call(self, inputs, *args, **kwargs):
         return inputs * K.sigmoid(self._beta * inputs)
 
-@keras.saving.register_keras_serializable()
+@register
 class HardSwish(keras.layers.Layer):
 
     def __init__(self, *args, **kwargs):

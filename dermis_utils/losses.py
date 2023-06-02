@@ -1,9 +1,9 @@
 from tensorflow.keras import backend as K
 from tensorflow import keras
 import tensorflow as tf
+from const import register
 
-
-@keras.saving.register_keras_serializable()
+@register
 @tf.function
 def categorical_focal_crossentropy(
     y_true,
@@ -30,10 +30,10 @@ def categorical_focal_crossentropy(
 
     y_prob = K.sum(y_true * y_prob, axis = axis)
     modulating_factor = K.pow(1 - y_prob, gamma)
-    return K.mean(alpha * modulating_factor * ce)
+    return alpha * modulating_factor * ce
 
-@keras.saving.register_keras_serializable()
-class CategoricalFocalCrossentropy(keras.__internal__.losses.LossFunctionWrapper):
+@register
+class CategoricalFocalCrossentropy(keras.losses.Loss):
 
     def __init__(
         self,
@@ -44,18 +44,33 @@ class CategoricalFocalCrossentropy(keras.__internal__.losses.LossFunctionWrapper
         reduction = keras.losses.Reduction.AUTO,
         name = "categorical_focal_crossentropy"
     ):
+        super().__init__(reduction = reduction, name = name)
         # Ensure scalar
         assert tf.rank(gamma) == 0
         assert tf.rank(alpha) == 0
 
-        gamma = tf.constant(gamma, dtype = tf.float32)
-        alpha = tf.constant(alpha, dtype = tf.float32)
-        super().__init__(
-            categorical_focal_crossentropy,
-            reduction = reduction,
-            name = name,
-            gamma = gamma,
-            alpha = alpha,
-            from_logits = from_logits,
-            axis = axis,
+        self._gamma = tf.constant(gamma, dtype = tf.float32)
+        self._alpha = tf.constant(alpha, dtype = tf.float32)
+        self.from_logits = from_logits
+        self._axis = axis
+    
+    def call(self, y_true, y_pred, sample_weight = None):
+        return K.mean(
+            categorical_focal_crossentropy(
+                y_true,
+                y_pred,
+                gamma = self._gamma,
+                alpha = self._alpha,
+                from_logits = self.from_logits,
+                axis = self._axis
+            )
         )
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'gamma': self._gamma.numpy().tolist(),
+            'alpha': self._alpha.numpy().tolist(),
+            'from_logits': self.from_logits,
+            'axis': self._axis
+        })
