@@ -3,34 +3,6 @@ from tensorflow import keras
 import tensorflow as tf
 from .const import register
 
-@register
-@tf.function
-def categorical_focal_crossentropy(
-    y_true,
-    y_pred,
-    gamma = 1.,
-    alpha = 1.,
-    from_logits = False,
-    axis = -1
-):
-    y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.convert_to_tensor(y_true, dtype = y_pred.dtype)
-
-    ce = K.categorical_crossentropy(
-        y_true,
-        y_pred,
-        from_logits = from_logits,
-        axis = axis
-    )
-
-    if from_logits:
-        y_prob = K.softmax(y_pred, axis = axis)
-    else:
-        y_prob = y_pred
-
-    y_prob = K.sum(y_true * y_prob, axis = axis)
-    modulating_factor = K.pow(1 - y_prob, gamma)
-    return alpha * modulating_factor * ce
 
 @register
 class CategoricalFocalCrossentropy(keras.losses.Loss):
@@ -55,16 +27,25 @@ class CategoricalFocalCrossentropy(keras.losses.Loss):
         self._axis = axis
     
     def call(self, y_true, y_pred, sample_weight = None):
-        return K.mean(
-            categorical_focal_crossentropy(
-                y_true,
-                y_pred,
-                gamma = self._gamma,
-                alpha = self._alpha,
-                from_logits = self.from_logits,
-                axis = self._axis
-            )
+
+        y_pred = tf.convert_to_tensor(y_pred)
+        y_true = tf.convert_to_tensor(y_true, dtype = y_pred.dtype)
+
+        ce = K.categorical_crossentropy(
+            y_true,
+            y_pred,
+            from_logits = self.from_logits,
+            axis = self._axis
         )
+
+        if self.from_logits:
+            y_prob = K.softmax(y_pred, axis = self._axis)
+        else:
+            y_prob = y_pred
+
+        y_prob = K.sum(y_true * y_prob, axis = self._axis)
+        modulating_factor = K.pow(1 - y_prob, self._gamma)
+        return K.mean(self._alpha * modulating_factor * ce)
 
     def get_config(self):
         config = super().get_config()
