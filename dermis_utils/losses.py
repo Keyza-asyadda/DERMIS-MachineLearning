@@ -1,7 +1,7 @@
 from tensorflow.keras import backend as K
 from tensorflow import keras
 import tensorflow as tf
-from const import register
+from .const import register
 
 @register
 @tf.function
