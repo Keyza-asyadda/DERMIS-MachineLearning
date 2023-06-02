@@ -6,11 +6,11 @@ import tensorflow as tf
 @keras.saving.register_keras_serializable()
 class Swish(keras.layers.Layer):
 
-    def __init__(self, beta = None, name = "swish", *args, **kwargs):
+    def __init__(self, beta = None, *args, **kwargs):
         # Ensure scalar
         assert beta is None or tf.rank(beta) == 0
 
-        super().__init__(name = name, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._beta = beta
 
     def build(self, input_shape):
