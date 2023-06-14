@@ -42,7 +42,7 @@ class HardSwish(keras.layers.Layer):
 
 
 @register
-class PreprocesKecam(keras.layers.Layer):
+class PreprocessKecam(keras.layers.Layer):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
