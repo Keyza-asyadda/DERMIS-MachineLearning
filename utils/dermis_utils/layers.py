@@ -40,3 +40,14 @@ class HardSwish(keras.layers.Layer):
     def call(self, inputs, *args, **kwargs):
         return inputs * tf.nn.relu6(inputs) / 6
 
+
+@register
+class PreprocesKecam(keras.layers.Layer):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mean = tf.constant([[[[123.675, 116.28, 103.53]]]], dtype = tf.float32)
+        self.std = tf.constant([[[[58.395, 57.120003, 57.375]]]], dtype = tf.float32)
+    
+    def call(self, inputs):
+        return (inputs - self.mean) / self.std
